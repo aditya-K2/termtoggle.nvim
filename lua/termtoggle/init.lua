@@ -43,6 +43,7 @@ local function TermToggle()
         DrawTerm()
         if TERM_IS_ON == nil then
             vim.cmd("term zsh")
+            vim.cmd("set nobuflisted")
             TERM_TOGGLE_BUF_ID = vim.api.nvim_get_current_buf()
             TERM_IS_ON = true
         end
