@@ -9,8 +9,9 @@ vim.cmd [[
         autocmd TermClose * :lua require("termtoggle").Check()
         autocmd VimLeave * :lua TERM_TOGGLE_WIN_ID = nil
     augroup END
-    tnoremap <M-m> <C-\><C-n>:lua require("termtoggle").TermToggle()<CR>
 ]]
+
+vim.api.nvim_set_keymap('t', '<M-m>', '<C-\\><C-n>:lua require("termtoggle").TermToggle()<CR>', {silent=true, noremap=true})
 
 local function CloseWin()
     if TERM_TOGGLE_WIN_ID ~= nil then
