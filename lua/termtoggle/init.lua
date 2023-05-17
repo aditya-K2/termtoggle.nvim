@@ -11,8 +11,11 @@ local function close_win()
 end
 
 local function check()
-    close_win()
-    TERM_IS_ON = nil
+    local __current_win__ = vim.api.nvim_get_current_win()
+    if __current_win__ == TERM_TOGGLE_WIN_ID then
+        close_win()
+        TERM_IS_ON = nil
+    end
 end
 
 local function draw_term()
