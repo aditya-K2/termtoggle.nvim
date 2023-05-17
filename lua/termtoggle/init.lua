@@ -1,31 +1,21 @@
-TERM_TOGGLE_WIN_ID = nil
-TERM_TOGGLE_BUF_ID = nil
-TERM_TOGGLE_HEIGHT = 20
-TERM_IS_ON = nil
-vim.cmd [[
-    augroup CPH
-        autocmd!
-        autocmd VimResized * :lua require("termtoggle").OnResize()
-        autocmd TermClose * :lua require("termtoggle").Check()
-        autocmd VimLeave * :lua TERM_TOGGLE_WIN_ID = nil
-    augroup END
-]]
+local TERM_TOGGLE_WIN_ID = nil
+local TERM_TOGGLE_BUF_ID = nil
+local TERM_TOGGLE_HEIGHT = 20
+local TERM_IS_ON = nil
 
-vim.api.nvim_set_keymap('t', '<M-m>', '<C-\\><C-n>:lua require("termtoggle").TermToggle()<CR>', {silent=true, noremap=true})
-
-local function CloseWin()
+local function close_win()
     if TERM_TOGGLE_WIN_ID ~= nil then
         vim.api.nvim_win_close(TERM_TOGGLE_WIN_ID, true)
         TERM_TOGGLE_WIN_ID = nil
     end
 end
 
-local function Check()
-    CloseWin()
+local function check()
+    close_win()
     TERM_IS_ON = nil
 end
 
-local function DrawTerm()
+local function draw_term()
     local _width = vim.api.nvim_list_uis()[1].width
     local _height = vim.api.nvim_list_uis()[1].height
     TERM_TOGGLE_WIN_ID = vim.api.nvim_open_win(TERM_TOGGLE_BUF_ID, true, { relative="editor",
@@ -34,14 +24,16 @@ local function DrawTerm()
                  border="rounded"})
     vim.wo.number = false
     vim.wo.relativenumber = false
+    vim.api.nvim_win_set_hl_ns(TERM_TOGGLE_WIN_ID, vim.api.nvim_create_namespace("termtoggle"))
+    vim.api.nvim_set_hl(vim.api.nvim_create_namespace("termtoggle"), "Normal", { bg = "black" })
 end
 
-local function TermToggle()
+local function term_toggle()
     if TERM_TOGGLE_BUF_ID == nil then
         TERM_TOGGLE_BUF_ID = vim.api.nvim_create_buf(false, true)
     end
     if TERM_TOGGLE_WIN_ID == nil then
-        DrawTerm()
+        draw_term()
         if TERM_IS_ON == nil then
             vim.cmd("term zsh")
             vim.cmd("set nobuflisted")
@@ -49,20 +41,38 @@ local function TermToggle()
             TERM_IS_ON = true
         end
     else
-        CloseWin()
+        close_win()
     end
 end
 
-local function OnResize()
+local function on_resize()
     if TERM_TOGGLE_WIN_ID ~= nil then
-        CloseWin()
-        DrawTerm()
+        close_win()
+        draw_term()
     end
 end
 
-return {
-    TermToggle = TermToggle,
-    OnResize = OnResize,
-    CloseWin = CloseWin,
-    Check = Check,
-}
+local term_group = vim.api.nvim_create_augroup("github.com/aditya-K2/termtoggle.nvim", {clear = true})
+
+vim.api.nvim_create_autocmd("VimResized", {
+    group = term_group,
+    pattern = "*",
+    callback = on_resize
+})
+
+vim.api.nvim_create_autocmd("TermClose", {
+    group = term_group,
+    pattern = "*",
+    callback = check
+})
+
+vim.api.nvim_create_autocmd("VimLeave", {
+    group = term_group,
+    pattern = "*",
+    callback = function()
+        TERM_TOGGLE_WIN_ID = nil
+    end
+})
+
+vim.api.nvim_set_keymap('t', '<M-m>', '', {silent=true, noremap=true, callback=term_toggle})
+vim.api.nvim_set_keymap("n", '<M-m>', '', {silent=true, noremap=true, callback=term_toggle})
