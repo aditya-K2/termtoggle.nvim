@@ -2,6 +2,13 @@ local TERM_TOGGLE_WIN_ID = nil
 local TERM_TOGGLE_BUF_ID = nil
 local TERM_TOGGLE_HEIGHT = 20
 local TERM_IS_ON = nil
+local TERM_BG=""
+
+local function setup(t)
+    if t ~= nil and t.bg ~= nil then
+        TERM_BG = t.bg
+    end
+end
 
 local function close_win()
     if TERM_TOGGLE_WIN_ID ~= nil then
@@ -27,8 +34,10 @@ local function draw_term()
                  border="rounded"})
     vim.wo.number = false
     vim.wo.relativenumber = false
-    vim.api.nvim_win_set_hl_ns(TERM_TOGGLE_WIN_ID, vim.api.nvim_create_namespace("termtoggle"))
-    vim.api.nvim_set_hl(vim.api.nvim_create_namespace("termtoggle"), "Normal", { bg = "black" })
+    if TERM_BG ~= "" then
+        vim.api.nvim_win_set_hl_ns(TERM_TOGGLE_WIN_ID, vim.api.nvim_create_namespace("termtoggle"))
+        vim.api.nvim_set_hl(vim.api.nvim_create_namespace("termtoggle"), "Normal", { bg = TERM_BG})
+    end
 end
 
 local function term_toggle()
@@ -79,3 +88,7 @@ vim.api.nvim_create_autocmd("VimLeave", {
 
 vim.api.nvim_set_keymap('t', '<M-m>', '', {silent=true, noremap=true, callback=term_toggle})
 vim.api.nvim_set_keymap("n", '<M-m>', '', {silent=true, noremap=true, callback=term_toggle})
+
+return {
+    setup = setup,
+}
